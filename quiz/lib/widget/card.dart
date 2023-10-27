@@ -1,0 +1,42 @@
+
+import 'package:flutter/material.dart';
+
+import '../model/categories.dart';
+
+class CardItem extends StatelessWidget {
+  final int index;
+  
+  const CardItem({required Key key, required this.index}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ClipRect(
+          child: Stack(
+            children: <Widget>[
+              Container(
+                width: double.infinity,
+                height: 150,
+                decoration: BoxDecoration(
+                  color: Colors.black26,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(
+                    categories[index].name,
+                    style: TextStyle(
+                      fontSize: 19,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold
+                    ),
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
