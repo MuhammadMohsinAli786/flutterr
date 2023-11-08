@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:math';
@@ -7,7 +6,8 @@ class Result extends StatefulWidget {
   final String userName;
   final int score;
 
-  const Result({super.key, required this.userName, required this.score});
+  const Result({Key? key, required this.userName, required this.score})
+      : super(key: key);
 
   @override
   State<Result> createState() => _ResultState();
@@ -37,6 +37,70 @@ class _ResultState extends State<Result> {
     }
   }
 
+  List<Map<String, String>> questionReport = [
+    {
+      'question': 'Question 1',
+      'correctAnswer': 'Option A',
+      'selectedAnswer': 'Option B',
+    },
+    {
+      'question': 'Question 2',
+      'correctAnswer': 'Option C',
+      'selectedAnswer': 'Option D',
+    },
+    {
+      'question': 'Question 3',
+      'correctAnswer': 'Option D',
+      'selectedAnswer': 'Option A',
+    },
+    {
+      'question': 'Question 4',
+      'correctAnswer': 'Option C',
+      'selectedAnswer': 'Option D',
+    },
+    {
+      'question': 'Question 5',
+      'correctAnswer': 'Option D',
+      'selectedAnswer': 'Option A',
+    },
+
+    // Add more questions and their corresponding correct and selected answers
+  ];
+
+  void showReport() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Question Report'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: questionReport
+                .map((report) => ListTile(
+              title: Text(report['question']!),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Correct Answer: ${report['correctAnswer']}'),
+                  Text('Selected Answer: ${report['selectedAnswer']}'),
+                ],
+              ),
+            ))
+                .toList(),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     // Stop the confetti controller when the widget is disposed
@@ -50,8 +114,9 @@ class _ResultState extends State<Result> {
       alignment: Alignment.topCenter,
       children: [
         Scaffold(
-            backgroundColor: Colors.teal,
-            body: SafeArea(
+          backgroundColor: Colors.teal,
+          body: SafeArea(
+            child: SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -153,6 +218,17 @@ class _ResultState extends State<Result> {
                       ),
                     ),
                   ),
+                  ElevatedButton(
+                    onPressed: showReport,
+                    child: const Text('View Report',style: TextStyle(
+                      color: Colors.white,
+                      fontFamily: 'SourceSansPro',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal.shade700),
+
+                  ),
                   GestureDetector(
                     onTap: () {
                       final navigator = Navigator.of(context);
@@ -185,7 +261,9 @@ class _ResultState extends State<Result> {
                   ),
                 ],
               ),
-            )),
+            ),
+          ),
+        ),
         ConfettiWidget(
           confettiController: _controller,
           blastDirection: -pi / 2,
