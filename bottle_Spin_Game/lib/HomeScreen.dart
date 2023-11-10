@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 setState(() {
                   isOn = value;
                   if (isOn) {
-                    audioPlayer.play(AssetSource('assets/music.mp3'));
+                    audioPlayer.play(AssetSource('assetes/note1.wav'));
                   } else {
                     audioPlayer.stop();
                   }

@@ -1,4 +1,4 @@
-import 'package:bottle_spin_game/HomeScreen.dart';
+import 'package:bottle_spin_game/Splash_Screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -6,18 +6,18 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Bottle Spin Game',
-      theme: ThemeData( colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: const SplashScreen(), // Set the splash screen as the initial screen
     );
   }
 }

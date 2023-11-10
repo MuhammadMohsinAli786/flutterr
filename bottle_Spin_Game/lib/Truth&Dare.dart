@@ -145,11 +145,11 @@ class _TruthDareState extends State<TruthDare> {
       },
       child: Container(
         width: MediaQuery.of(context).size.width-10,
-        height: MediaQuery.of(context).size.width*0.1,
+        height: MediaQuery.of(context).size.height*0.1,
         padding: EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: Colors.green,
-          border: Border.all(color: Colors.black45),
+          border: Border.all(color: Colors.greenAccent),
           borderRadius: BorderRadius.circular(50),
         ),
         child: Center(
@@ -175,69 +175,71 @@ class _TruthDareState extends State<TruthDare> {
             builder: (context, setState) {
               return AlertDialog(
                 title: Text('Add Player'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: imageFile != null
-                          ? FileImage(File(imageFile!.path))
-                          : null,
-                      child: IconButton(
-                        icon: Icon(Icons.camera_alt),
-                        onPressed: () async {
-                          XFile? pickedFile = await ImagePicker().pickImage(
-                            source: ImageSource.gallery,
-                          );
-                          if (pickedFile != null) {
-                            print("Image selected: ${pickedFile.path}");
-                            setState(() {
-                              imageFile = pickedFile;
-                            });
-                          }
-                        },
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundImage: imageFile != null
+                            ? FileImage(File(imageFile!.path))
+                            : null,
+                        child: IconButton(
+                          icon: Icon(Icons.camera_alt),
+                          onPressed: () async {
+                            XFile? pickedFile = await ImagePicker().pickImage(
+                              source: ImageSource.gallery,
+                            );
+                            if (pickedFile != null) {
+                              print("Image selected: ${pickedFile.path}");
+                              setState(() {
+                                imageFile = pickedFile;
+                              });
+                            }
+                          },
+                        ),
                       ),
-                    ),
-                    TextField(
-                      controller: playerNameController,
-                      decoration: InputDecoration(labelText: 'Player Name'),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 30.0),
-                      child: MyButton(
-                        title: 'Add Player',
-                        colors: Colors.greenAccent,
-                        onpress: () {
-                          if (playerNameController.text.isNotEmpty) {
-                            setState(() {
-                              final player = Player(
-                                playerNameController.text,
-                                imageFile?.path,
-                              );
-                              players.add(player);
-                              print("Player added: ${player.name}, ${player.imagePath}");
-                              playerAdded = true;
-                              playerDropdownItems.add(DropdownMenuItem<Player>(
-                                value: player,
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      backgroundImage: player.imagePath != null
-                                          ? FileImage(File(player.imagePath!))
-                                          : null,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(player.name),
-                                  ],
-                                ),
-                              ));
-                            });
-                            Navigator.pop(context);
-                          }
-                        },
+                      TextField(
+                        controller: playerNameController,
+                        decoration: InputDecoration(labelText: 'Player Name'),
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10.0),
+                        child: MyButton(
+                          title: 'Add Player',
+                          colors: Colors.greenAccent,
+                          onpress: () {
+                            if (playerNameController.text.isNotEmpty) {
+                              setState(() {
+                                final player = Player(
+                                  playerNameController.text,
+                                  imageFile?.path,
+                                );
+                                players.add(player);
+                                print("Player added: ${player.name}, ${player.imagePath}");
+                                playerAdded = true;
+                                playerDropdownItems.add(DropdownMenuItem<Player>(
+                                  value: player,
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        backgroundImage: player.imagePath != null
+                                            ? FileImage(File(player.imagePath!))
+                                            : null,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(player.name),
+                                    ],
+                                  ),
+                                ));
+                              });
+                              Navigator.pop(context);
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -289,89 +291,91 @@ class _TruthDareState extends State<TruthDare> {
         ],
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: _buildSelectBottleButton(),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: _buildSelectBackgroundButton(),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: _buildNumberSelectionButton(),
-            ),
-            DropdownButton<Player>(
-              items: playerDropdownItems,
-              onChanged: (selectedPlayer) {
-                print("Selected player: ${selectedPlayer?.name}");
-              },
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: MyButton(
-                title: 'Truth & Dare',
-                colors: Colors.green,
-                onpress: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PlayerListScreen(
-                        allplayers: players,
-                        selectedImage: selectedBackgroundImage,
-                        selectedBottleImage: selectedBottleImage,
-                      ),
-                    ),
-                  );
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: _buildSelectBottleButton(),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: _buildSelectBackgroundButton(),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: _buildNumberSelectionButton(),
+              ),
+              DropdownButton<Player>(
+                items: playerDropdownItems,
+                onChanged: (selectedPlayer) {
+                  print("Selected player: ${selectedPlayer?.name}");
                 },
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStatePropertyAll(Colors.green)
-                ),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: Text('Add Task'),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TextField(
-                              decoration: InputDecoration(labelText: 'Task Name'),
-                            ),
-                            SizedBox.square(),
-                            ElevatedButton(
-                              style: ButtonStyle(
-                                  backgroundColor: MaterialStatePropertyAll(Colors.lightGreenAccent)
-                              ),
-                              onPressed: () {
-                                // Handle adding the task
-                                String taskName = "Example Task"; // Replace with the actual task name
-                                String taskDescription = "Task description"; // Replace with the actual task description
-                                addTask(Task(taskName, taskDescription));
-
-                                Navigator.pop(context);
-                              },
-                              child: Text('Add Task'),
-                            ),
-                          ],
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: MyButton(
+                  title: 'Truth & Dare',
+                  colors: Colors.green,
+                  onpress: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PlayerListScreen(
+                          allplayers: players,
+                          selectedImage: selectedBackgroundImage,
+                          selectedBottleImage: selectedBottleImage,
                         ),
-                      );
-                    },
-                  );
-                },
-                child: Text('Add Task'),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: ElevatedButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStatePropertyAll(Colors.green)
+                  ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text('Add Task'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextField(
+                                decoration: InputDecoration(labelText: 'Task Name'),
+                              ),
+                              SizedBox.square(),
+                              ElevatedButton(
+                                style: ButtonStyle(
+                                    backgroundColor: MaterialStatePropertyAll(Colors.lightGreenAccent)
+                                ),
+                                onPressed: () {
+                                  // Handle adding the task
+                                  String taskName = "Example Task"; // Replace with the actual task name
+                                  String taskDescription = "Task description"; // Replace with the actual task description
+                                  addTask(Task(taskName, taskDescription));
+
+                                  Navigator.pop(context);
+                                },
+                                child: Text('Add Task'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  child: Text('Add Task'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -413,11 +417,11 @@ class _TruthDareState extends State<TruthDare> {
 
       child: Container(
         width: MediaQuery.of(context).size.width-10,
-        height: MediaQuery.of(context).size.width*0.1,
+        height: MediaQuery.of(context).size.height*0.1,
         padding: EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: Colors.green,
-          border: Border.all(color: Colors.black45),
+          border: Border.all(color: Colors.greenAccent),
           borderRadius: BorderRadius.circular(50),
         ),
         child: Center(
@@ -463,7 +467,7 @@ class _TruthDareState extends State<TruthDare> {
                         ],
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(30.0),
+                        padding: const EdgeInsets.all(10.0),
                         child: MyButton(
                           title: 'Add Players',
                           colors: Colors.green,
@@ -483,11 +487,11 @@ class _TruthDareState extends State<TruthDare> {
       },
       child: Container(
         width: MediaQuery.of(context).size.width-10,
-        height: MediaQuery.of(context).size.width*0.1,
+        height: MediaQuery.of(context).size.height*0.1,
         padding: EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: Colors.green,
-          border: Border.all(color: Colors.black45),
+          border: Border.all(color: Colors.greenAccent),
           borderRadius: BorderRadius.circular(50),
         ),
         child: Center(

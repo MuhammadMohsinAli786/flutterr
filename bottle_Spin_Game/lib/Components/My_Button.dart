@@ -30,10 +30,10 @@ class MyButton extends StatelessWidget {
               border: Border.all(width: 2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.greenAccent.withOpacity(0.3),
                   spreadRadius: 2,
                   blurRadius: 5,
-                  offset: Offset(0, 3),
+                  offset: Offset(0, 9),
                 ),
               ],
             ),
