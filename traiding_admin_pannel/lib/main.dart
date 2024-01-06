@@ -2,8 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 
 void main() {
   runApp(MyApp());
@@ -24,23 +23,28 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  File? _pickedImage;
   VideoPlayerController? _videoController;
-  AudioPlayer _audioPlayer = AudioPlayer();
-  String _webViewUrl = 'https://www.youtube.com/';
+  TextEditingController _textController = TextEditingController();
+  FlutterSoundPlayer? _audioPlayer;
+  FlutterSoundRecorder? _audioRecorder;
+  bool _isRecording = false;
+  String _currentRecording = '';
+  Color _micIconColor = Colors.black; // Initial color
 
-  @override
-  void dispose() {
-    _videoController?.dispose();
-    _audioPlayer.dispose();
-    super.dispose();
+  _MyHomePageState() {
+    _audioPlayer = FlutterSoundPlayer();
+    _audioRecorder = FlutterSoundRecorder();
   }
 
   Future<void> _pickImage() async {
     final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      // Handle the selected image
-      print('Image path: ${pickedFile.path}');
+      setState(() {
+        _pickedImage = File(pickedFile.path);
+        _videoController = null;
+      });
     }
   }
 
@@ -48,50 +52,138 @@ class _MyHomePageState extends State<MyHomePage> {
     final pickedFile = await ImagePicker().pickVideo(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      _videoController = VideoPlayerController.file(File(pickedFile.path))
-        ..initialize().then((_) {
-          setState(() {});
-        });
+      setState(() {
+        _videoController = VideoPlayerController.file(File(pickedFile.path))
+          ..initialize().then((_) {
+            _pickedImage = null;
+            setState(() {});
+          });
+      });
     }
   }
 
-  void _playAudio() {
-    _audioPlayer.play('audio_url.mp3' as Source); // Replace 'audio_url.mp3' with the actual audio file URL
+  Future<void> _startRecording() async {
+    try {
+      await _audioRecorder!.openAudioSession();
+      await _audioRecorder!.startRecorder(
+        toFile: 'path/to/your/audio/file.aac',
+        codec: Codec.aacMP4,
+      );
+
+      setState(() {
+        _isRecording = true;
+        _micIconColor = Colors.blue; // Change color to blue when recording starts
+      });
+    } catch (e) {
+      print("Error starting recording: $e");
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    try {
+      String? path = await _audioRecorder!.stopRecorder();
+      if (path != null) {
+        setState(() {
+          _isRecording = false;
+          _currentRecording = path!;
+          _micIconColor = Colors.black; // Reset color when recording stops
+        });
+      }
+    } catch (e) {
+      print("Error stopping recording: $e");
+    }
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer?.closeAudioSession();
+    _audioRecorder?.closeAudioSession();
+    _videoController?.dispose();
+    _textController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    double containerSize = MediaQuery.of(context).size.width * 0.4;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Flutter App'),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          ElevatedButton(
-            onPressed: _pickImage,
-            child: Text('Pick Image'),
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: containerSize,
+                height: containerSize,
+                decoration: BoxDecoration(
+                  border: Border.all(),
+                ),
+                child: _pickedImage != null
+                    ? Image.file(_pickedImage!, fit: BoxFit.cover)
+                    : IconButton(
+                  icon: Icon(Icons.camera_alt),
+                  onPressed: _pickImage,
+                ),
+              ),
+              SizedBox(height: 20),
+              Container(
+                width: containerSize,
+                height: containerSize,
+                decoration: BoxDecoration(
+                  border: Border.all(),
+                ),
+                child: _videoController != null
+                    ? AspectRatio(
+                  aspectRatio: _videoController!.value.aspectRatio,
+                  child: VideoPlayer(_videoController!),
+                )
+                    : IconButton(
+                  icon: Icon(Icons.videocam),
+                  onPressed: _pickVideo,
+                ),
+              ),
+              SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _textController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Enter Text',
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    _isRecording
+                        ? IconButton(
+                      icon: Icon(Icons.stop),
+                      onPressed: _stopRecording,
+                      color: _micIconColor,
+                    )
+                        : IconButton(
+                      icon: Icon(Icons.mic),
+                      onPressed: _startRecording,
+                      color: _micIconColor,
+                    ),
+                   // Adjust the spacing as needed
+
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+              if (_currentRecording.isNotEmpty)
+                Text('Recorded Voice: $_currentRecording'),
+            ],
           ),
-          ElevatedButton(
-            onPressed: _pickVideo,
-            child: Text('Pick Video'),
-          ),
-          _videoController != null
-              ? AspectRatio(
-            aspectRatio: _videoController!.value.aspectRatio,
-            child: VideoPlayer(_videoController!),
-          )
-              : Container(),
-          ElevatedButton(
-            onPressed: _playAudio,
-            child: Text('Play Audio'),
-          ),
-          // WebView(
-          //   initialUrl: _webViewUrl,
-          //   javascriptMode: JavascriptMode.unrestricted,
-          // ),
-        ],
+        ),
       ),
     );
   }
