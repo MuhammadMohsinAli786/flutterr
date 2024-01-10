@@ -4,18 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:firebase_database/firebase_database.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Platform.isAndroid?await Firebase.initializeApp(
+  Platform.isAndroid
+      ? await Firebase.initializeApp(
     options: const FirebaseOptions(
       apiKey: "AIzaSyD0oBokSf_n1MWXzOIP2KS6ndq7Ue2EmMc",
       appId: "1:39537905776:android:2b6f2cea23aec1b2f7a4b5",
-      messagingSenderId:"39537905776",
+      messagingSenderId: "39537905776",
       projectId: "flutter-mobile-applicati-473c5",
     ),
   )
-      :await Firebase.initializeApp();
+      : await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -24,8 +26,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: MyHomePage(),
+    return  MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primaryColor: Colors.blue, // Change the primary color to blue
+        hintColor: Colors.orange, // Change the accent color to orange
+        scaffoldBackgroundColor: Colors.white, // Change the background color to white
+        textTheme: const TextTheme(
+          titleLarge: TextStyle(
+            color: Colors.black, // Change the text color to black
+            fontSize: 20.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    home: const MyHomePage(),
     );
   }
 }
@@ -47,6 +62,9 @@ class _MyHomePageState extends State<MyHomePage> {
   String _currentRecording = '';
   Color _micIconColor = Colors.black;
   List<String> files = [];
+  List<Map<String, dynamic>> firebaseDataList = [];
+
+  DatabaseReference _databaseReference = FirebaseDatabase.instance.reference();
 
   _MyHomePageState() {
     _audioPlayer = FlutterSoundPlayer();
@@ -177,6 +195,129 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Future<void> _postToFirebase() async {
+    // Check if at least one type of data is selected
+    if (_pickedImage == null &&
+        _videoController == null &&
+        _textController.text.isEmpty &&
+        _currentRecording.isEmpty) {
+      // Show a message to add data first
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please add at least one type of data.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Upload selected data to Firebase Realtime Database
+    Map<String, dynamic> postData = {
+      'image': _pickedImage?.path ?? '',
+      'video': _videoController?.dataSource ?? '',
+      'text': _textController.text,
+      'audio': _currentRecording,
+    };
+
+    try {
+      await _databaseReference.push().set(postData);
+
+      // Clear selected data from the UI
+      setState(() {
+        _pickedImage = null;
+        _videoController = null;
+        _textController.clear();
+        _currentRecording = '';
+        files.clear();
+      });
+
+      // Show success message using a SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Data saved successfully.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (error) {
+      // Handle error if data couldn't be saved
+      print('Error saving data: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to save data.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _fetchDataFromFirebase() {
+    _databaseReference.once().then((DatabaseEvent event) {
+      DataSnapshot snapshot = event.snapshot;
+
+      if (snapshot.value != null) {
+        setState(() {
+          firebaseDataList.clear();
+          if (snapshot.value is Map) {
+            (snapshot.value as Map).forEach((key, value) {
+              firebaseDataList.add(Map<String, dynamic>.from(value));
+            });
+
+            // Print data to the console for debugging
+            print('Firebase Data: $firebaseDataList');
+          }
+        });
+
+        // Show a message or navigate to the data view
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Firebase data retrieved successfully.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        // Show a message if there is no data
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No data found in Firebase.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }).catchError((error) {
+      print('Error fetching data from Firebase: $error');
+      // Handle error if fetching data fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to fetch data from Firebase.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    });
+  }
+
+  void _viewFirebaseDataDetails(int index) {
+    // Implement how you want to view the details for the selected data
+    showDialog(
+      context: context,
+      builder: (context) {
+        // Use firebaseDataList[index] to display details
+        // ...
+        return AlertDialog(
+          title: const Text('Data Details'),
+          content: Text('Details for data at index $index'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _audioPlayer?.closeAudioSession();
@@ -193,14 +334,35 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter App'),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)), // Soft rounded bottom
+        ),
+        backgroundColor: Colors.blueGrey[900], // Dark background for elegance
+        elevation: 0, // Remove default shadow for a cleaner look
+        title: Text(
+          'Trading Admin Panel',
+          style: TextStyle(
+            fontSize: 22, // Larger font for prominence
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.cloud_download, color: Colors.white),
+            onPressed: _fetchDataFromFirebase,
+          ),
+          // Additional actions (if needed)
+        ],
       ),
+
       body: SingleChildScrollView(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              const SizedBox(height: 20),
               Container(
                 width: containerSize,
                 height: containerSize,
@@ -268,11 +430,25 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _createNewFile,
-                child: const Icon(Icons.add),
-              ),
-              // List of Files
+          ElevatedButton(
+          onPressed: _createNewFile,
+          style: ElevatedButton.styleFrom(
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(30))), // Smoother rounded shape
+            minimumSize: const Size(150, 50), // Increased size for better visibility
+            primary: Colors.deepPurple.shade200, // Vibrant primary color
+            onPrimary: Colors.white, // High-contrast text and icon color
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.add),
+              const SizedBox(width: 10), // Spacing between icon and text
+              const Text('Create File', style: TextStyle(fontSize: 18)),
+            ],
+          ),
+        ),
+
+          // List of Files
               Column(
                 children: files.map((file) {
                   return ListTile(
@@ -283,6 +459,21 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                 }).toList(),
               ),
+              // List of Firebase Data
+              const SizedBox(height: 20),
+              if (firebaseDataList.isNotEmpty)
+                Column(
+                  children: firebaseDataList.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    Map<String, dynamic> data = entry.value;
+                    return ListTile(
+                      title: Text('Data at Index $index'),
+                      onTap: () {
+                        _viewFirebaseDataDetails(index);
+                      },
+                    );
+                  }).toList(),
+                ),
               const SizedBox(height: 20),
               if (_currentRecording.isNotEmpty)
                 Text('Recorded Voice: $_currentRecording'),
@@ -290,6 +481,22 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
       ),
-    );
+      bottomNavigationBar: BottomAppBar(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              primary: Colors.lightBlueAccent.shade400, // Match background color
+              onPrimary: Colors.white,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(25)),
+              ),
+            ),
+            onPressed: _postToFirebase,
+            child: const Text('Post', style: TextStyle(fontSize: 18)),
+          ),
+        ),
+        ),
+      );
   }
 }
