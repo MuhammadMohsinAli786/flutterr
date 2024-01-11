@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:traiding_app/Calculater/calculate.dart';
+import 'package:traiding_app/pricing/price.dart';
 import 'package:traiding_app/src/bloc/coin_bloc.dart';
 import 'package:traiding_app/src/repositories/coin_repository.dart';
 import 'src/views/home_page/home_page.dart';
@@ -42,9 +44,9 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _pages = [
-      const HomePage(),
-      // const ListPage(),
-      // const ProfilePage(),
+      HomePage(),
+      price(),
+      Calculate(),
     ];
   }
 
@@ -68,12 +70,16 @@ class _HomeState extends State<Home> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'List',
+            icon: Icon(Icons.currency_exchange),
+            label: 'Price',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+            icon: Icon(Icons.calculate_sharp),
+            label: 'Calculate',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.currency_bitcoin),
+            label: 'Currency',
           ),
         ],
       ),
@@ -81,10 +87,4 @@ class _HomeState extends State<Home> {
   }
 }
 
-class ProfilePage {
-  const ProfilePage();
-}
 
-class ListPage {
-  const ListPage();
-}
